@@ -135,7 +135,7 @@ export const UserManager: React.FC<UserManagerProps> = ({ users, currentUser, on
                 <tr>
                   <th className="px-6 py-4 font-medium">{t.userName}</th>
                   <th className="px-6 py-4 font-medium">{t.email}</th>
-                  <th className="px-6 py-4 font-medium">{t.role}</th>
+                  <th className="px-6 py-4 font-medium">{t.userRole}</th>
                   <th className="px-6 py-4 font-medium">{t.phone}</th>
                   <th className="px-6 py-4 font-medium">{t.applicationDetails}</th>
                 </tr>
@@ -206,14 +206,14 @@ export const UserManager: React.FC<UserManagerProps> = ({ users, currentUser, on
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t.role}</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t.userRole}</label>
                 <select
                   className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none"
                   value={formData.role}
                   onChange={e => setFormData({ ...formData, role: e.target.value as UserRole })}
                 >
-                  <option value={UserRole.USER}>{t.roleUser}</option>
-                  <option value={UserRole.ADMIN}>{t.roleAdmin}</option>
+                  <option value={UserRole.USER}>{t.user}</option>
+                  <option value={UserRole.ADMIN}>{t.admin}</option>
                   <option value={UserRole.AGENT}>{t.agent}</option>
                 </select>
               </div>

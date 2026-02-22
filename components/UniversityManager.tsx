@@ -18,7 +18,7 @@ interface UniversityManagerProps {
 }
 
 const EMPTY_FORM: Partial<University> = {
-  name: '', website: '', country: 'Turkey', description: '', logo: undefined
+  name: '', website: '', country: 'Turkey', city: '', description: '', logo: undefined
 };
 
 const DEGREE_COLORS: Record<string, string> = {
@@ -106,6 +106,7 @@ export const UniversityManager: React.FC<UniversityManagerProps> = ({
       id: editingId || Date.now().toString(),
       name: formData.name, website: formData.website,
       country: formData.country as 'Turkey' | 'Cyprus',
+      city: formData.city || '',
       description: formData.description,
       logo: logoBase64 || undefined
     };
@@ -133,7 +134,7 @@ export const UniversityManager: React.FC<UniversityManagerProps> = ({
         if (data.added && Array.isArray(data.added)) {
           data.added.forEach((u: any) => onAddUniversity({
             id: u.id, name: u.name, website: u.website,
-            country: u.country, description: u.description, logo: u.logo || undefined
+            country: u.country, city: u.city, description: u.description, logo: u.logo || undefined
           }));
           alert(`${t.successAdd}: ${data.added.length} ${t.universities}`);
         } else { alert(data.message || t.successAdd); }
@@ -228,6 +229,11 @@ export const UniversityManager: React.FC<UniversityManagerProps> = ({
                     <span className={`text-xs px-2 py-1 rounded-full ${uni.country === 'Turkey' ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-orange-600'}`}>
                       {uni.country}
                     </span>
+                    {uni.city && (
+                      <span className="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-600">
+                        {uni.city}
+                      </span>
+                    )}
                     {/* Action buttons – visible on hover */}
                     {isAdmin && (
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
@@ -285,7 +291,7 @@ export const UniversityManager: React.FC<UniversityManagerProps> = ({
                   value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t.universityCountry}</label>
                   <select className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none"
@@ -293,6 +299,12 @@ export const UniversityManager: React.FC<UniversityManagerProps> = ({
                     <option value="Turkey">تركيا</option>
                     <option value="Cyprus">قبرص</option>
                   </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">المدينة</label>
+                  <input type="text"
+                    className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                    value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t.universityWebsite}</label>
@@ -392,7 +404,7 @@ export const UniversityManager: React.FC<UniversityManagerProps> = ({
                   <h3 className="font-black text-gray-900 leading-tight">{detailUni.name}</h3>
                   <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                     <MapPin size={10} className="text-blue-500" />
-                    <span>{detailUni.country === 'Turkey' ? 'TURKEY' : 'CYPRUS'}</span>
+                    <span>{detailUni.city ? `${detailUni.city}, ` : ''}{detailUni.country === 'Turkey' ? 'TURKEY' : 'CYPRUS'}</span>
                   </div>
                 </div>
               </div>

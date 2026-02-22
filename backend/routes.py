@@ -163,6 +163,7 @@ def get_universities():
         'name': u.name,
         'website': u.website,
         'country': u.country,
+        'city': getattr(u, 'city', ''),
         'description': u.description,
         'logo': getattr(u, 'logo', None)
     } for u in universities])
@@ -178,6 +179,7 @@ def add_university():
         name=data['name'],
         website=data['website'],
         country=data['country'],
+        city=data.get('city', ''),
         description=data['description'],
         logo=data.get('logo')  # optional logo (base64 or URL)
     )
@@ -234,6 +236,31 @@ def delete_program(prog_id):
     db.session.commit()
     return jsonify({'message': 'تم حذف البرنامج'}), 200
 
+# Update Program
+@api_bp.route('/programs/<prog_id>', methods=['PUT'])
+def update_program(prog_id):
+    program = Program.query.get(prog_id)
+    if not program:
+        return jsonify({'message': 'البرنامج غير موجود'}), 404
+    data = request.json
+    program.university_id = data.get('universityId', program.university_id)
+    program.name = data.get('name', program.name)
+    program.degree = data.get('degree', program.degree)
+    program.language = data.get('language', program.language)
+    if 'years' in data:
+        program.years = data['years']
+    if 'deadline' in data:
+        program.deadline = data['deadline']
+    if 'fee' in data:
+        program.fee = data['fee']
+    if 'currency' in data:
+        program.currency = data['currency']
+    if 'description' in data:
+        program.description = data['description']
+    
+    db.session.commit()
+    return jsonify({'message': 'تم تحديث البرنامج', 'id': program.id}), 200
+
 # Update University
 @api_bp.route('/universities/<uni_id>', methods=['PUT'])
 def update_university(uni_id):
@@ -244,6 +271,7 @@ def update_university(uni_id):
     university.name = data.get('name', university.name)
     university.website = data.get('website', university.website)
     university.country = data.get('country', university.country)
+    university.city = data.get('city', getattr(university, 'city', ''))
     university.description = data.get('description', university.description)
     # logo: allow setting to None (remove), a new value, or keep existing
     if 'logo' in data:
@@ -418,8 +446,8 @@ def post_application_message(app_id):
                 n = Notification(
                     id=str(uuid.uuid4()),
                     user_id=application.user_id,
-                    title="رسالة جديدة",
-                    message=f"أدمن: {message[:50]}...",
+                    title="New Message",
+                    message=f"Admin: {message[:50]}...",
                     link=f"/applications/{app_id}",
                     created_at=datetime.utcnow().isoformat(),
                     type="MESSAGE"
@@ -433,8 +461,8 @@ def post_application_message(app_id):
                 n = Notification(
                     id=str(uuid.uuid4()),
                     user_id=user.id,
-                    title="رسالة جديدة",
-                    message=f"طلب #{app_id}: {message[:50]}...",
+                    title="New Message",
+                    message=f"App #{app_id}: {message[:50]}...",
                     link=f"/applications/{app_id}",
                     created_at=datetime.utcnow().isoformat(),
                     type="MESSAGE"
@@ -467,6 +495,7 @@ def import_universities():
         name = str(row.get('name') or row.get('اسم') or row.get('Name') or '').strip()
         website = str(row.get('website') or row.get('موقع') or row.get('Website') or '').strip()
         country = str(row.get('country') or row.get('دولة') or row.get('Country') or 'Turkey').strip()
+        city = str(row.get('city') or row.get('مدينة') or row.get('City') or '').strip()
         description = str(row.get('description') or row.get('وصف') or row.get('Description') or '').strip()
         # Logo: support columns named logo / Logo / شعار — expected to be a URL (http/https)
         logo_raw = str(row.get('logo') or row.get('Logo') or row.get('شعار') or '').strip()
@@ -481,6 +510,7 @@ def import_universities():
             name=name,
             website=website or '',
             country=country,
+            city=city or '',
             description=description or '',
             logo=logo
         )
@@ -490,6 +520,7 @@ def import_universities():
             'name': uni.name,
             'website': uni.website,
             'country': uni.country,
+            'city': uni.city,
             'description': uni.description,
             'logo': uni.logo
         })
@@ -520,6 +551,7 @@ def application_files(app_id):
         files_info = [
             {
                 'name': f.split('_', 1)[1] if '_' in f else f,
+                'filename': f,
                 'url': url_for('api.upload_file', filename=f, _external=False)
             } for f in files
         ]
@@ -540,10 +572,37 @@ def application_files(app_id):
     files_info = [
         {
             'name': f.split('_', 1)[1] if '_' in f else f,
+            'filename': f,
             'url': url_for('api.upload_file', filename=f, _external=False)
         } for f in application.files
     ]
     return jsonify({'message': 'Files added', 'files': files_info}), 201
+
+@api_bp.route('/applications/<app_id>/files/<path:filename>', methods=['DELETE'])
+def delete_application_file(app_id, filename):
+    application = Application.query.get(app_id)
+    if not application:
+        return jsonify({'message': 'Application not found'}), 404
+
+    current_files = application.files or []
+    if filename not in current_files:
+        return jsonify({'message': 'File not found in application'}), 404
+
+    current_files.remove(filename)
+    # SQLAlchemy requires assigning a new reference or mutating the mutable list properly if using JSON
+    # It's safer to assign a new list of the remaining items.
+    application.files = list(current_files)
+    db.session.commit()
+
+    upload_folder = os.path.join(current_app.root_path, 'uploads')
+    file_path = os.path.join(upload_folder, filename)
+    if os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+        except Exception as e:
+            pass # ignore if file already missing or locked
+
+    return jsonify({'message': 'File deleted successfully'}), 200
 
 # Update application status
 @api_bp.route('/applications/<app_id>/status', methods=['PUT'])
@@ -567,8 +626,8 @@ def update_application_status(app_id):
         notification = Notification(
             id=str(uuid.uuid4()),
             user_id=notify_user_id,
-            title="تحديث حالة الطلب",
-            message=f"تم تغيير حالة طلبك #{application.id} إلى {new_status}",
+            title="Application Status Update",
+            message=f"Your application #{application.id} status changed to {new_status}",
             link=f"/applications/{application.id}",
             created_at=datetime.utcnow().isoformat(),
             type="STATUS"

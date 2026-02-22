@@ -47,6 +47,11 @@ if __name__ == '__main__':
                     conn.execute(text('ALTER TABLE universities ADD COLUMN logo TEXT'))
                 except Exception:
                     pass
+            if 'city' not in uni_cols:
+                try:
+                    conn.execute(text("ALTER TABLE universities ADD COLUMN city VARCHAR NOT NULL DEFAULT ''"))
+                except Exception:
+                    pass
             conn.commit()
         # إضافة أدمن افتراضي إذا لم يوجد
         try:

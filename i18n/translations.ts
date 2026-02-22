@@ -111,6 +111,8 @@ export interface Translations {
     pending: string;
     approved: string;
     rejected: string;
+    missingDocs: string;
+    underReview: string;
     applicationDetails: string;
     updateStatus: string;
     sendMessage: string;
@@ -129,6 +131,7 @@ export interface Translations {
     noUsers: string;
     admin: string;
     agent: string;
+    hostAgent: string;
     user: string;
     changePassword: string;
     newPassword: string;
@@ -140,6 +143,9 @@ export interface Translations {
     markAsRead: string;
     newMessage: string;
     statusUpdate: string;
+    statusUpdateMessage: string;
+    messageFromAdmin: string;
+    messageFromApp: string;
 
     // Messages
     successAdd: string;
@@ -275,6 +281,8 @@ export const translations: Record<Language, Translations> = {
         pending: 'قيد الانتظار',
         approved: 'مقبول',
         rejected: 'مرفوض',
+        missingDocs: 'طلب ملفات ناقصة',
+        underReview: 'قيد التقييم',
         applicationDetails: 'تفاصيل الطلب',
         updateStatus: 'تحديث الحالة',
         sendMessage: 'إرسال رسالة',
@@ -293,6 +301,7 @@ export const translations: Record<Language, Translations> = {
         noUsers: 'لا يوجد مستخدمون',
         admin: 'مدير',
         agent: 'وكيل',
+        hostAgent: 'الوكيل المضيف',
         user: 'مستخدم',
         changePassword: 'تغيير كلمة المرور',
         newPassword: 'كلمة المرور الجديدة',
@@ -304,6 +313,9 @@ export const translations: Record<Language, Translations> = {
         markAsRead: 'تعليم كمقروء',
         newMessage: 'رسالة جديدة',
         statusUpdate: 'تحديث الحالة',
+        statusUpdateMessage: 'تم تغيير حالة طلبك #{id} إلى {status}',
+        messageFromAdmin: 'الأدمن: {message}',
+        messageFromApp: 'طلب #{id}: {message}',
 
         // Messages
         successAdd: 'تمت الإضافة بنجاح',
@@ -438,6 +450,8 @@ export const translations: Record<Language, Translations> = {
         pending: 'Pending',
         approved: 'Approved',
         rejected: 'Rejected',
+        missingDocs: 'Missing Documents',
+        underReview: 'Under Review',
         applicationDetails: 'Application Details',
         updateStatus: 'Update Status',
         sendMessage: 'Send Message',
@@ -456,6 +470,7 @@ export const translations: Record<Language, Translations> = {
         noUsers: 'No users found',
         admin: 'Admin',
         agent: 'Agent',
+        hostAgent: 'Host Agent',
         user: 'User',
         changePassword: 'Change Password',
         newPassword: 'New Password',
@@ -467,6 +482,9 @@ export const translations: Record<Language, Translations> = {
         markAsRead: 'Mark as Read',
         newMessage: 'New Message',
         statusUpdate: 'Status Update',
+        statusUpdateMessage: 'Your application #{id} status changed to {status}',
+        messageFromAdmin: 'Admin: {message}',
+        messageFromApp: 'App #{id}: {message}',
 
         // Messages
         successAdd: 'Added successfully',
@@ -601,6 +619,8 @@ export const translations: Record<Language, Translations> = {
         pending: 'Beklemede',
         approved: 'Onaylandı',
         rejected: 'Reddedildi',
+        missingDocs: 'Eksik Belgeler İste',
+        underReview: 'Değerlendirme Aşamasında',
         applicationDetails: 'Başvuru Detayları',
         updateStatus: 'Durumu Güncelle',
         sendMessage: 'Mesaj Gönder',
@@ -619,6 +639,7 @@ export const translations: Record<Language, Translations> = {
         noUsers: 'Kullanıcı bulunamadı',
         admin: 'Yönetici',
         agent: 'Temsilci',
+        hostAgent: 'Sorumlu Temsilci',
         user: 'Kullanıcı',
         changePassword: 'Şifre Değiştir',
         newPassword: 'Yeni Şifre',
@@ -630,6 +651,9 @@ export const translations: Record<Language, Translations> = {
         markAsRead: 'Okundu Olarak İşaretle',
         newMessage: 'Yeni Mesaj',
         statusUpdate: 'Durum Güncellemesi',
+        statusUpdateMessage: '#{id} numaralı başvurunuzun durumu {status} olarak güncellendi',
+        messageFromAdmin: 'Yönetici: {message}',
+        messageFromApp: 'Başvuru #{id}: {message}',
 
         // Messages
         successAdd: 'Başarıyla eklendi',

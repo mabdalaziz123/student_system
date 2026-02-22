@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Program, University, User, UserRole } from '../types';
-import { Plus, BookOpen, Clock, DollarSign, Calendar, Trash2 } from 'lucide-react';
+import { Plus, BookOpen, Clock, DollarSign, Calendar, Trash2, Pencil } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 
 interface ProgramManagerProps {
   programs: Program[];
   universities: University[];
   onAddProgram: (prog: Program) => void;
+  onEditProgram?: (prog: Program) => void;
   onDeleteProgram: (id: string) => void;
   currentUser?: User | null;
 }
@@ -15,12 +16,15 @@ export const ProgramManager: React.FC<ProgramManagerProps> = ({
   programs,
   universities,
   onAddProgram,
+  onEditProgram,
   onDeleteProgram,
   currentUser
 }) => {
   const { t, translateDegree } = useTranslation();
   const isAdmin = currentUser?.role === UserRole.ADMIN;
   const [isModalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Program>>({
     name: '',
@@ -39,8 +43,8 @@ export const ProgramManager: React.FC<ProgramManagerProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.universityId && formData.name) {
-      onAddProgram({
-        id: Date.now().toString(),
+      const progData: Program = {
+        id: editingId || Date.now().toString(),
         universityId: formData.universityId,
         name: formData.name,
         degree: formData.degree as any,
@@ -50,13 +54,38 @@ export const ProgramManager: React.FC<ProgramManagerProps> = ({
         currency: formData.currency || 'USD',
         deadline: formData.deadline || new Date().toISOString().split('T')[0],
         description: formData.description
-      });
+      };
+
+      if (modalMode === 'edit' && onEditProgram) {
+        onEditProgram(progData);
+      } else {
+        onAddProgram(progData);
+      }
+
       setModalOpen(false);
+      setEditingId(null);
       setFormData({
         name: '', universityId: '', degree: 'Bachelor', language: 'English',
         years: 4, fee: 0, currency: 'USD', deadline: '', description: ''
       });
     }
+  };
+
+  const openAddModal = () => {
+    setModalMode('add');
+    setEditingId(null);
+    setFormData({
+      name: '', universityId: '', degree: 'Bachelor', language: 'English',
+      years: 4, fee: 0, currency: 'USD', deadline: '', description: ''
+    });
+    setModalOpen(true);
+  };
+
+  const openEditModal = (prog: Program) => {
+    setModalMode('edit');
+    setEditingId(prog.id);
+    setFormData({ ...prog });
+    setModalOpen(true);
   };
 
   const handleDeleteConfirm = () => {
@@ -78,7 +107,7 @@ export const ProgramManager: React.FC<ProgramManagerProps> = ({
         </div>
         {isAdmin && (
           <button
-            onClick={() => setModalOpen(true)}
+            onClick={openAddModal}
             className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Plus size={20} />
@@ -99,7 +128,7 @@ export const ProgramManager: React.FC<ProgramManagerProps> = ({
                 <th className="px-6 py-4 font-medium">{t.programLanguage}</th>
                 <th className="px-6 py-4 font-medium">{t.programFee}</th>
                 <th className="px-6 py-4 font-medium">{t.programDeadline}</th>
-                {isAdmin && <th className="px-6 py-4 font-medium text-center">{t.delete}</th>}
+                {isAdmin && <th className="px-6 py-4 font-medium text-center">إجراءات</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -119,13 +148,22 @@ export const ProgramManager: React.FC<ProgramManagerProps> = ({
                   <td className="px-6 py-4 text-red-500 text-xs">{program.deadline}</td>
                   {isAdmin && (
                     <td className="px-6 py-4 text-center">
-                      <button
-                        onClick={() => setConfirmDeleteId(program.id)}
-                        title={t.delete}
-                        className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700 transition-colors opacity-60 group-hover:opacity-100"
-                      >
-                        <Trash2 size={15} />
-                      </button>
+                      <div className="flex justify-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => openEditModal(program)}
+                          title="تعديل"
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-700 transition-colors"
+                        >
+                          <Pencil size={15} />
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteId(program.id)}
+                          title={t.delete}
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700 transition-colors"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
                     </td>
                   )}
                 </tr>
@@ -144,7 +182,7 @@ export const ProgramManager: React.FC<ProgramManagerProps> = ({
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl max-w-2xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold mb-4">{t.addProgram}</h3>
+            <h3 className="text-xl font-bold mb-4">{modalMode === 'add' ? t.addProgram : 'تعديل البرنامج'}</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>

@@ -34,6 +34,7 @@ class University(db.Model):
     name = db.Column(db.String, nullable=False)
     website = db.Column(db.String, nullable=False)
     country = db.Column(db.String, nullable=False)
+    city = db.Column(db.String, nullable=False) # Added city field
     description = db.Column(db.Text, nullable=False)
     logo = db.Column(db.Text, nullable=True)  # URL or base64 - optional
 

@@ -3,7 +3,7 @@ import { Application, Student, Program, University, ApplicationStatus } from '..
 import {
   Plus, Filter, FileText, CheckCircle, XCircle, AlertCircle,
   MessageSquare, ArrowRight, User as UserIcon, GraduationCap,
-  Clock, Send, Upload, Paperclip, ChevronLeft, MapPin
+  Clock, Send, Upload, Paperclip, ChevronLeft, MapPin, Trash2
 } from 'lucide-react';
 import { useTranslation } from '../hooks/useTranslation';
 
@@ -30,7 +30,7 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
   const [messages, setMessages] = React.useState<Array<{ id: string; sender: string; message: string; createdAt: string }>>([]);
   const [newMessage, setNewMessage] = React.useState('');
-  const [detailFiles, setDetailFiles] = React.useState<Array<{ url: string; name: string }>>([]);
+  const [detailFiles, setDetailFiles] = React.useState<Array<{ url: string; name: string; filename?: string }>>([]);
   const [attachFiles, setAttachFiles] = React.useState<FileList | null>(null);
 
   // Create Form State
@@ -136,7 +136,7 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
           const r = await fetch(`/api/applications/${selectedAppId}/files`);
           if (r.ok) {
             const list = await r.json();
-            setDetailFiles(list.map((x: any) => ({ url: x.url, name: x.name || x.url.split('/').pop() })));
+            setDetailFiles(list.map((x: any) => ({ url: x.url, name: x.name || x.url.split('/').pop(), filename: x.filename })));
           } else { setDetailFiles([]); }
         } catch (e) {
           console.error('Failed to load application files', e);
@@ -309,10 +309,10 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
         {(currentUser?.role === 'ADMIN' || currentUser?.role === 'USER') && (
           <div className="bg-white p-2 rounded-2xl shadow-sm border border-gray-100 flex flex-wrap gap-2">
             {[
-              { id: ApplicationStatus.MISSING_DOCS, label: 'طلب ملفات ناقصة', icon: <AlertCircle size={16} />, activeColor: 'bg-orange-600 text-white', inactiveColor: 'bg-orange-50 text-orange-700 border-orange-100 hover:bg-orange-100' },
-              { id: ApplicationStatus.UNDER_REVIEW, label: 'قيد التقييم', icon: <Clock size={16} />, activeColor: 'bg-blue-600 text-white', inactiveColor: 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100' },
-              { id: ApplicationStatus.ACCEPTED, label: 'قبول الطلب', icon: <CheckCircle size={16} />, activeColor: 'bg-green-600 text-white', inactiveColor: 'bg-green-50 text-green-700 border-green-100 hover:bg-green-100' },
-              { id: ApplicationStatus.REJECTED, label: 'رفض الطلب', icon: <XCircle size={16} />, activeColor: 'bg-red-600 text-white', inactiveColor: 'bg-red-50 text-red-700 border-red-100 hover:bg-red-100' },
+              { id: ApplicationStatus.MISSING_DOCS, label: t.missingDocs, icon: <AlertCircle size={16} />, activeColor: 'bg-orange-600 text-white', inactiveColor: 'bg-orange-50 text-orange-700 border-orange-100 hover:bg-orange-100' },
+              { id: ApplicationStatus.UNDER_REVIEW, label: t.underReview, icon: <Clock size={16} />, activeColor: 'bg-blue-600 text-white', inactiveColor: 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100' },
+              { id: ApplicationStatus.ACCEPTED, label: t.approved, icon: <CheckCircle size={16} />, activeColor: 'bg-green-600 text-white', inactiveColor: 'bg-green-50 text-green-700 border-green-100 hover:bg-green-100' },
+              { id: ApplicationStatus.REJECTED, label: t.rejected, icon: <XCircle size={16} />, activeColor: 'bg-red-600 text-white', inactiveColor: 'bg-red-50 text-red-700 border-red-100 hover:bg-red-100' },
             ].map((btn) => {
               const isActive = app.status === btn.id;
               return (
@@ -386,7 +386,7 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
                 <UserIcon size={24} />
               </div>
               <div>
-                <h3 className="text-orange-400 text-xs font-bold uppercase tracking-wider mb-1">الوكيل المضيف</h3>
+                <h3 className="text-orange-400 text-xs font-bold uppercase tracking-wider mb-1">{t.hostAgent}</h3>
                 <p className="text-xl font-bold text-gray-800 leading-tight">{app.agentName}</p>
                 <div className="flex gap-4 mt-2 text-sm text-orange-500 font-medium font-mono">
                   {app.agentPhone && <span className="flex items-center gap-1">{app.agentCountryCode || ''} {app.agentPhone}</span>}
@@ -500,18 +500,43 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
               {detailFiles.length > 0 ? (
                 <div className="space-y-2 mb-4">
                   {detailFiles.map((f, i) => (
-                    <a
-                      key={i} href={f.url} target="_blank" rel="noreferrer"
-                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-blue-50 transition-all group"
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-400 group-hover:text-blue-500 group-hover:border-blue-100">
-                        <FileText size={16} />
-                      </div>
-                      <div className="flex-1 min-w-0 pr-2 text-right">
-                        <p className="text-[11px] font-bold text-gray-700 truncate">{f.name}</p>
-                        <span className="text-[9px] text-gray-400 uppercase">View File</span>
-                      </div>
-                    </a>
+                    <div key={i} className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl hover:bg-blue-50 transition-all group">
+                      <a
+                        href={f.url} target="_blank" rel="noreferrer"
+                        className="flex-1 flex items-center gap-3 min-w-0"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-400 group-hover:text-blue-500 group-hover:border-blue-100 shrink-0">
+                          <FileText size={16} />
+                        </div>
+                        <div className="flex-1 min-w-0 pr-2 text-right">
+                          <p className="text-[11px] font-bold text-gray-700 truncate" dir="ltr">{f.name}</p>
+                          <span className="text-[9px] text-gray-400 uppercase">View File</span>
+                        </div>
+                      </a>
+                      {f.filename && (
+                        <button
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            if (!window.confirm(t.confirmDelete)) return;
+                            try {
+                              const r = await fetch(`/api/applications/${selectedAppId}/files/${f.filename}`, { method: 'DELETE' });
+                              if (r.ok) {
+                                setDetailFiles(prev => prev.filter(file => file.filename !== f.filename));
+                              } else {
+                                const data = await r.json();
+                                alert(data.message || t.errorDelete);
+                              }
+                            } catch (err) {
+                              alert(t.errorConnection);
+                            }
+                          }}
+                          className="w-8 h-8 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shrink-0"
+                          title={t.delete}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -547,7 +572,7 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
                       const r = await fetch(`/api/applications/${selectedAppId}/files`, { method: 'POST', body: fd });
                       const data = await r.json();
                       if (r.ok) {
-                        setDetailFiles(data.files.map((x: any) => ({ url: x.url, name: x.name || x.url.split('/').pop() })));
+                        setDetailFiles(data.files.map((x: any) => ({ url: x.url, name: x.name || x.url.split('/').pop(), filename: x.filename })));
                         setAttachFiles(null);
                         const inp = document.getElementById('attach-files-det') as HTMLInputElement;
                         if (inp) inp.value = '';
@@ -563,9 +588,9 @@ export const ApplicationManager: React.FC<ApplicationManagerProps> = ({
             </div>
 
             {/* Sidebar reserved for files and chat summary if needed */}
-          </div>
-        </div>
-      </div>
+          </div >
+        </div >
+      </div >
     );
   };
 

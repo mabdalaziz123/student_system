@@ -18,7 +18,7 @@ interface NotificationDropdownProps {
 }
 
 export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ currentUserId, onNavigate }) => {
-    const { t, language } = useTranslation();
+    const { t, language, translateNotification } = useTranslation();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -97,7 +97,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ curr
                         className="fixed inset-0 z-10"
                         onClick={() => setIsOpen(false)}
                     />
-                    <div className="absolute left-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-20 max-h-96 overflow-y-auto">
+                    <div className={`absolute ${language === 'ar' ? 'left-0' : 'right-0'} mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-20 max-h-96 overflow-y-auto ${language === 'ar' ? 'text-right' : 'text-left'}`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
                         <div className="p-4 border-b border-gray-200 flex justify-between items-center">
                             <h3 className="font-bold text-gray-800">{t.notificationsTitle}</h3>
                             {unreadCount > 0 && (
@@ -114,35 +114,38 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ curr
                             </div>
                         ) : (
                             <div className="divide-y divide-gray-100">
-                                {notifications.map(notification => (
-                                    <div
-                                        key={notification.id}
-                                        onClick={() => handleNotificationClick(notification)}
-                                        className={`p-4 cursor-pointer transition-colors ${notification.isRead
-                                            ? 'bg-white hover:bg-gray-50'
-                                            : 'bg-blue-50 hover:bg-blue-100'
-                                            }`}
-                                    >
-                                        <div className="flex items-start gap-3">
-                                            <div
-                                                className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${notification.isRead ? 'bg-gray-300' : 'bg-blue-500'
-                                                    }`}
-                                            />
-                                            <div className="flex-1 min-w-0">
-                                                <h4 className={`font-medium text-sm ${notification.isRead ? 'text-gray-700' : 'text-gray-900'
-                                                    }`}>
-                                                    {notification.title}
-                                                </h4>
-                                                <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                                                    {notification.message}
-                                                </p>
-                                                <p className="text-xs text-gray-400 mt-1">
-                                                    {new Date(notification.createdAt).toLocaleString(language === 'ar' ? 'ar-SA' : language === 'tr' ? 'tr-TR' : 'en-US')}
-                                                </p>
+                                {notifications.map(notification => {
+                                    const { title, message } = translateNotification(notification);
+                                    return (
+                                        <div
+                                            key={notification.id}
+                                            onClick={() => handleNotificationClick(notification)}
+                                            className={`p-4 cursor-pointer transition-colors ${notification.isRead
+                                                ? 'bg-white hover:bg-gray-50'
+                                                : 'bg-blue-50 hover:bg-blue-100'
+                                                }`}
+                                        >
+                                            <div className="flex items-start gap-3">
+                                                <div
+                                                    className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${notification.isRead ? 'bg-gray-300' : 'bg-blue-500'
+                                                        }`}
+                                                />
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className={`font-medium text-sm ${notification.isRead ? 'text-gray-700' : 'text-gray-900'
+                                                        }`}>
+                                                        {title}
+                                                    </h4>
+                                                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                                                        {message}
+                                                    </p>
+                                                    <p className="text-xs text-gray-400 mt-1">
+                                                        {new Date(notification.createdAt).toLocaleString(language === 'ar' ? 'ar-SA' : language === 'tr' ? 'tr-TR' : 'en-US')}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

@@ -34,10 +34,36 @@ export default function App() {
   const [activePage, setActivePage] = useState('dashboard');
   const [prefillStudentIdForApp, setPrefillStudentIdForApp] = useState<string | null>(null);
   const [targetApplicationId, setTargetApplicationId] = useState<string | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const savedSession = localStorage.getItem('userSession');
+    if (savedSession) {
+      try {
+        const session = JSON.parse(savedSession);
+        const now = Date.now();
+        const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+
+        if (now - session.timestamp < TWENTY_FOUR_HOURS) {
+          setState(prev => ({ ...prev, currentUser: session.user }));
+        } else {
+          localStorage.removeItem('userSession');
+        }
+      } catch (e) {
+        localStorage.removeItem('userSession');
+      }
+    }
+    setIsLoaded(true);
+  }, []);
 
 
 
   const handleLogin = (user: User) => {
+    const session = {
+      user: user,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('userSession', JSON.stringify(session));
     setState(prev => ({
       ...prev,
       currentUser: user
@@ -45,6 +71,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('userSession');
     setState(prev => ({ ...prev, currentUser: null }));
   };
 
@@ -142,6 +169,27 @@ export default function App() {
         setState(prev => ({ ...prev, programs: [...prev.programs, { ...prog, id: data.id, currency: (prog as any).currency || 'USD' }] }));
       } else {
         alert(data.message || t.errorAdd);
+      }
+    } catch (err) {
+      alert(t.errorConnection);
+    }
+  };
+
+  const editProgram = async (prog: Program) => {
+    try {
+      const res = await fetch(`/api/programs/${prog.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(prog)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setState(prev => ({
+          ...prev,
+          programs: prev.programs.map(p => p.id === prog.id ? prog : p)
+        }));
+      } else {
+        alert(data.message || t.errorUpdate);
       }
     } catch (err) {
       alert(t.errorConnection);
@@ -294,6 +342,10 @@ export default function App() {
     fetchAll();
   }, [state.currentUser]);
 
+  if (!isLoaded) {
+    return <div className="min-h-screen flex items-center justify-center bg-gray-50">{t.loading}</div>;
+  }
+
   if (!state.currentUser) {
     return <Login onLogin={handleLogin} />;
   }
@@ -312,7 +364,7 @@ export default function App() {
       case 'universities':
         return <UniversityManager universities={state.universities} programs={state.programs} onAddUniversity={addUniversity} onEditUniversity={editUniversity} onDeleteUniversity={deleteUniversity} currentUser={state.currentUser} />;
       case 'programs':
-        return <ProgramManager programs={state.programs} universities={state.universities} onAddProgram={addProgram} onDeleteProgram={deleteProgram} currentUser={state.currentUser} />;
+        return <ProgramManager programs={state.programs} universities={state.universities} onAddProgram={addProgram} onEditProgram={editProgram} onDeleteProgram={deleteProgram} currentUser={state.currentUser} />;
       case 'students':
         return <StudentManager students={state.students} applications={state.applications} programs={state.programs} universities={state.universities} onAddStudent={addStudent} onCreateApplicationForStudent={openCreateApplicationForStudent} onViewApplication={openApplicationDetails} currentUser={state.currentUser} />;
       case 'applications':

@@ -19,6 +19,7 @@ export interface University {
   name: string;
   website: string;
   country: 'Turkey' | 'Cyprus';
+  city: string;
   description: string;
   logo?: string; // URL or base64 - optional
 }

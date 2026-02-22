@@ -11,10 +11,14 @@ export const useTranslation = () => {
             'Pending': t.pending,
             'APPROVED': t.approved,
             'Approved': t.approved,
+            'ACCEPTED': t.approved,
             'Accepted': t.approved,
             'REJECTED': t.rejected,
             'Rejected': t.rejected,
-            'Missing Documents': t.pending, // fallback
+            'MISSING_DOCS': t.missingDocs,
+            'Missing Documents': t.missingDocs,
+            'UNDER_REVIEW': t.underReview,
+            'Under Review': t.underReview,
         };
         return statusMap[status] || status;
     };
@@ -56,6 +60,43 @@ export const useTranslation = () => {
         return roleMap[role] || role;
     };
 
+    const translateNotification = (n: { type: string; title: string; message: string }) => {
+        if (n.type === 'STATUS') {
+            const idMatch = n.message.match(/#([A-Za-z0-9-]+)/);
+            const id = idMatch ? idMatch[1] : '';
+            // Try to extract status - it's at the end
+            const statusMatch = n.message.match(/changed to (.+)$/);
+            const rawStatus = statusMatch ? statusMatch[1] : '';
+            const translatedStatus = translateStatus(rawStatus);
+
+            return {
+                title: t.statusUpdate,
+                message: t.statusUpdateMessage.replace('{id}', id).replace('{status}', translatedStatus)
+            };
+        }
+
+        if (n.type === 'MESSAGE') {
+            if (n.message.startsWith('Admin:')) {
+                const msgContent = n.message.replace('Admin:', '').trim();
+                return {
+                    title: t.newMessage,
+                    message: t.messageFromAdmin.replace('{message}', msgContent)
+                };
+            }
+            if (n.message.startsWith('App #')) {
+                const idMatch = n.message.match(/#([A-Za-z0-9-]+)/);
+                const id = idMatch ? idMatch[1] : '';
+                const msgContent = n.message.split(':').slice(1).join(':').trim();
+                return {
+                    title: t.newMessage,
+                    message: t.messageFromApp.replace('{id}', id).replace('{message}', msgContent)
+                };
+            }
+        }
+
+        return { title: n.title, message: n.message };
+    };
+
     return {
         t,
         dir,
@@ -64,5 +105,6 @@ export const useTranslation = () => {
         translateDegree,
         translateGender,
         translateRole,
+        translateNotification,
     };
 };
